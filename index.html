@@ -879,20 +879,6 @@
     </div>
   </div>
 
-  <!-- Progress Bars -->
-  <div class="progress-bars animate delay6" id="progressSection">
-    <div class="section-header collapsed">
-      <h3 id="progressTitle">员工学习进度一览</h3>
-      <button class="btn-toggle" id="toggleProgress" onclick="toggleProgress()" aria-expanded="false">
-        <span>展开全部</span>
-        <span class="arrow">&#9662;</span>
-      </button>
-    </div>
-    <div class="progress-list-wrap" id="progressListWrap">
-      <div id="progressList"></div>
-    </div>
-  </div>
-
   <!-- Detail Table -->
   <div class="table-section animate delay6">
     <div class="table-header">
@@ -1111,15 +1097,6 @@ document.querySelectorAll('.quick-btn').forEach(btn => {
   });
 });
 
-// ==================== PROGRESS TOGGLE ====================
-function toggleProgress() {
-  const wrap = document.getElementById('progressListWrap');
-  const btn = document.getElementById('toggleProgress');
-  const isExpanded = wrap.classList.toggle('expanded');
-  btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-  btn.querySelector('span:first-child').textContent = isExpanded ? '收起全部' : '展开全部';
-}
-
 // ==================== MODAL ====================
 function openModal(emp) {
   document.getElementById('modalName').textContent = emp.name_cn;
@@ -1248,7 +1225,6 @@ function renderAll() {
   renderSummary();
   renderStatusChart();
   renderMonthlyChart();
-  renderProgressBars();
   renderTable();
 }
 
@@ -1386,33 +1362,6 @@ function showMonthDetail(monthKey, list, label) {
 
   document.getElementById('catModal').classList.add('active');
   document.body.style.overflow = 'hidden';
-}
-
-function renderProgressBars() {
-  const sorted = [...filteredData].sort((a, b) => b.progress_val - a.progress_val);
-  const container = document.getElementById('progressList');
-  container.innerHTML = '';
-
-  sorted.forEach((emp, i) => {
-    const pct = Math.round(emp.progress_val * 100);
-    const barCls = getPctBarClass(pct);
-    const barClr = getPctBarColor(pct);
-    const item = document.createElement('div');
-    item.className = 'progress-item';
-    item.style.animationDelay = (i * 0.02) + 's';
-    item.innerHTML = `
-      <span class="emp-name" title="${emp.name_cn} ${emp.name_en}">${emp.name_cn}<br><span style="font-size:11px;color:var(--text2);opacity:0.7;">${emp.name_en}</span></span>
-      <div class="bar-bg">
-        <div class="bar-fill ${barCls}" style="width: ${Math.max(pct, 2)}%">${pct > 15 ? pct + '%' : ''}</div>
-      </div>
-      <span class="pct" style="color:${barClr}">${pct}%</span>
-      <span class="detail">${emp.progress_detail || emp.progress_text}</span>
-    `;
-    item.addEventListener('click', () => openModal(emp));
-    container.appendChild(item);
-  });
-
-  document.getElementById('progressTitle').textContent = '员工学习进度一览 (' + sorted.length + ' 人)';
 }
 
 function sortTable(key) {
