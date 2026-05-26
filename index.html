@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merchandising 在线学习进度分析</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a;
+    --bg2: #1e293b;
+    --bg3: #334155;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --orange: #f97316;
+    --purple: #a855f7;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1e1a2e 0%, #0f172a 60%, #2a0a1a 100%);
+    padding: 0;
+    border-bottom: 2px solid rgba(220, 20, 60, 0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 40%, rgba(220, 20, 60, 0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner {
+    position: relative;
+    z-index: 1;
+    padding: 28px 40px 22px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .header-logo {
+    height: 72px;
+    width: auto;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+  }
+  .header-text h1 {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+  .header-text p {
+    color: var(--text2);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-text .live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(34,197,94,0.6);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  /* Filter Bar */
+  .filter-bar {
+    background: var(--bg2);
+    padding: 20px 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .filter-group label {
+    font-size: 12px;
+    color: var(--text2);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .filter-group input[type="date"] {
+    background: var(--bg3);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .filter-group input[type="date"]:focus {
+    border-color: var(--accent);
+  }
+  .filter-group input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
+    cursor: pointer;
+  }
+
+  .quick-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .quick-btn {
+    background: var(--bg3);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text2);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .quick-btn:hover {
+    background: rgba(59,130,246,0.15);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+  .quick-btn.active {
+    background: rgba(59,130,246,0.2);
+    border-color: var(--accent);
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  .filter-action {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .btn-filter, .btn-reset {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-filter {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(59,130,246,0.3);
+  }
+  .btn-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+  }
+  .btn-reset {
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .btn-reset:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+  }
+
+  /* Main Content */
+  .main { padding: 24px 40px 40px; }
+
+  /* Summary Cards */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .stat-card .value {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-card .sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 6px;
+  }
+  .stat-card .value.blue { color: var(--accent2); }
+  .stat-card .value.green { color: var(--green); }
+  .stat-card .value.yellow { color: var(--yellow); }
+  .stat-card .value.red { color: var(--red); }
+  .stat-card .value.orange { color: var(--orange); }
+  .stat-card .value.purple { color: var(--purple); }
+
+  /* Charts Row */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: var(--bg2);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .chart-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+  .chart-container {
+    position: relative;
+    height: 280px;
+  }
+
+  /* Progress bar section */
+  .progress-bars {
+    background: var(--bg2);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .progress-bars .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+  }
+  .progress-bars .section-header.collapsed {
+    margin-bottom: 0;
+  }
+  .progress-bars h3 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .btn-toggle {
+    background: var(--bg3);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text2);
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-toggle:hover {
+    background: rgba(59,130,246,0.15);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+  .btn-toggle .arrow {
+    transition: transform 0.3s;
+    display: inline-block;
+  }
+  .btn-toggle[aria-expanded="true"] .arrow {
+    transform: rotate(180deg);
+  }
+  .progress-list-wrap {
+    margin-top: 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out, opacity 0.3s;
+    opacity: 0;
+  }
+  .progress-list-wrap.expanded {
+    max-height: 3000px;
+    opacity: 1;
+    transition: max-height 0.6s ease-in, opacity 0.3s;
+  }
+  .progress-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    padding: 2px 8px;
+    margin-left: -8px;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .progress-item:hover {
+    background: rgba(59,130,246,0.08);
+  }
+  .progress-item .emp-name {
+    min-width: 90px;
+    font-size: 13px;
+    color: var(--text2);
+    text-align: right;
+  }
+  .progress-item .bar-bg {
+    flex: 1;
+    height: 22px;
+    background: var(--bg3);
+    border-radius: 11px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-item .bar-fill {
+    height: 100%;
+    border-radius: 11px;
+    transition: width 0.8s ease-out;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    min-width: 0;
+  }
+  .progress-item .bar-fill.pct-0 { background: linear-gradient(90deg, #ef4444, #dc2626); }
+  .progress-item .bar-fill.pct-100 { background: linear-gradient(90deg, #22c55e, #16a34a); }
+  .progress-item .bar-fill.pct-mid { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .progress-item .pct {
+    min-width: 48px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .progress-item .detail {
+    min-width: 80px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  /* Table */
+  .table-section {
+    background: var(--bg2);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .table-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .search-box {
+    background: var(--bg3);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--text2); }
+
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    background: linear-gradient(135deg, #dc143c 0%, #a31030 100%);
+    padding: 14px 16px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  thead th:hover {
+    background: linear-gradient(135deg, #e62e53 0%, #b8143a 100%);
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: rgba(59,130,246,0.05); }
+  tbody td {
+    padding: 12px 16px;
+    white-space: nowrap;
+  }
+  tbody td:nth-child(2),
+  tbody td:nth-child(3),
+  tbody td:nth-child(4) {
+    text-align: center;
+  }
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-badge.complete {
+    background: rgba(34,197,94,0.15);
+    color: #4ade80;
+  }
+  .status-badge.in-progress {
+    background: rgba(59,130,246,0.15);
+    color: #60a5fa;
+  }
+  .status-badge.not-started {
+    background: rgba(234,179,8,0.15);
+    color: #facc15;
+  }
+  .status-badge.not-joined {
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+  }
+  .progress-mini {
+    width: 80px;
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  .progress-mini .fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s;
+  }
+  .score-stars { color: var(--yellow); letter-spacing: 2px; }
+  .feedback-text {
+    max-width: 200px;
+    white-space: normal;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+
+  .table-scroll {
+    max-height: 500px;
+    overflow-y: auto;
+  }
+  .table-scroll::-webkit-scrollbar { width: 6px; }
+  .table-scroll::-webkit-scrollbar-track { background: transparent; }
+  .table-scroll::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate { animation: fadeInUp 0.4s ease-out both; }
+  .delay1 { animation-delay: 0.05s; }
+  .delay2 { animation-delay: 0.1s; }
+  .delay3 { animation-delay: 0.15s; }
+  .delay4 { animation-delay: 0.2s; }
+  .delay5 { animation-delay: 0.25s; }
+  .delay6 { animation-delay: 0.3s; }
+
+  /* Export button */
+  .btn-export {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-export:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+  }
+
+  /* Detail Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-card {
+    background: var(--bg2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+    animation: modalIn 0.3s ease-out;
+  }
+  .modal-card.wide {
+    max-width: 860px;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-header {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .modal-header .info h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .modal-header .info p {
+    font-size: 14px;
+    color: var(--text2);
+  }
+  .modal-close {
+    background: var(--bg3);
+    border: none;
+    color: var(--text2);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .modal-close:hover {
+    background: rgba(239,68,68,0.2);
+    color: #f87171;
+  }
+  .modal-body {
+    padding: 20px 28px;
+  }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .detail-item {
+    background: var(--bg);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .detail-item.full {
+    grid-column: 1 / -1;
+  }
+  .detail-item .dt-label {
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .detail-item .dt-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .detail-item .dt-value.big {
+    font-size: 24px;
+    font-weight: 700;
+  }
+  .modal-progress {
+    margin-top: 4px;
+    width: 100%;
+    height: 10px;
+    background: var(--bg3);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .modal-progress .fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.6s;
+  }
+  .modal-footer {
+    padding: 16px 28px 24px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .modal-footer .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-footer .btn:hover {
+    background: #2563eb;
+  }
+
+  /* Category Employee List Table */
+  .cat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .cat-table thead th {
+    background: var(--bg);
+    padding: 10px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .cat-table tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+  }
+  .cat-table tbody tr:hover { background: rgba(59,130,246,0.08); }
+  .cat-table tbody td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .cat-table tbody td:first-child {
+    color: var(--text2);
+    font-size: 12px;
+  }
+  .cat-table-scroll {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  .cat-table-scroll::-webkit-scrollbar { width: 5px; }
+  .cat-table-scroll::-webkit-scrollbar-track { background: transparent; }
+  .cat-table-scroll::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+
+  /* Feedback Card List */
+  .feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .feedback-list::-webkit-scrollbar { width: 5px; }
+  .feedback-list::-webkit-scrollbar-track { background: transparent; }
+  .feedback-list::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+  .feedback-card {
+    background: var(--bg);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: background 0.15s;
+  }
+  .feedback-card:hover {
+    background: rgba(59,130,246,0.06);
+  }
+  .feedback-card .fb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .feedback-card .fb-person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .feedback-card .fb-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .feedback-card .fb-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .feedback-card .fb-title {
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .feedback-card .fb-score {
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+  .feedback-card .fb-body {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+  }
+
+  @media (max-width: 768px) {
+    .filter-bar, .main { padding-left: 16px; padding-right: 16px; }
+    .header { padding: 20px 16px 16px; }
+    .charts-row { grid-template-columns: 1fr; }
+    .summary-row { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid { grid-template-columns: 1fr; }
+    .modal-card { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <img src="zuru-logo.png" alt="ZURU Logo" class="header-logo">
+    <div class="header-text">
+      <h1>Merchandising Onboarding Online Learning Dashboard</h1>
+      <p><span class="live-dot"></span>在线学习进度追踪与分析 | 数据更新至 <span id="updateDate">2025-03-26</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>入职起始日期</label>
+    <input type="date" id="dateFrom" value="2025-01-01">
+  </div>
+  <div class="filter-group">
+    <label>入职截止日期</label>
+    <input type="date" id="dateTo" value="2026-12-31">
+  </div>
+  <div class="filter-group">
+    <label>快捷筛选</label>
+    <div class="quick-btns">
+      <button class="quick-btn" data-from="2025-01-01" data-to="2025-03-31">2025 Q1</button>
+      <button class="quick-btn" data-from="2025-04-01" data-to="2025-06-30">2025 Q2</button>
+      <button class="quick-btn" data-from="2025-07-01" data-to="2025-09-30">2025 Q3</button>
+      <button class="quick-btn" data-from="2025-10-01" data-to="2025-12-31">2025 Q4</button>
+      <button class="quick-btn" data-from="2026-01-01" data-to="2026-03-31">2026 Q1</button>
+      <button class="quick-btn" data-from="2026-04-01" data-to="2026-06-30">2026 Q2</button>
+      <button class="quick-btn active" data-from="2025-01-01" data-to="2026-12-31">全部</button>
+    </div>
+  </div>
+  <div class="filter-action">
+    <button class="btn-filter" onclick="applyFilter()">筛选</button>
+    <button class="btn-reset" onclick="resetFilter()">重置</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  <!-- Summary Cards -->
+  <div class="summary-row" id="summaryRow">
+    <div class="stat-card animate delay1" onclick="showSummaryDetail('all')">
+      <div class="label">筛选范围内员工总数</div>
+      <div class="value blue" id="totalCount">0</div>
+      <div class="sub" id="dateRange"></div>
+    </div>
+    <div class="stat-card animate delay2" onclick="showSummaryDetail('complete')">
+      <div class="label">已完成学习</div>
+      <div class="value green" id="completedCount">0</div>
+      <div class="sub" id="completedPct"></div>
+    </div>
+    <div class="stat-card animate delay3" onclick="showSummaryDetail('in-progress')">
+      <div class="label">学习进行中</div>
+      <div class="value yellow" id="inProgressCount">0</div>
+      <div class="sub" id="inProgressPct"></div>
+    </div>
+    <div class="stat-card animate delay4" onclick="showSummaryDetail('not-joined')">
+      <div class="label">未参与学习</div>
+      <div class="value red" id="notJoinedCount">0</div>
+      <div class="sub" id="notJoinedPct"></div>
+    </div>
+    <div class="stat-card animate delay5" onclick="showFeedbackDetail()">
+      <div class="label">平均反馈评分</div>
+      <div class="value purple" id="avgScore">-</div>
+      <div class="sub" id="feedbackCount"></div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-row animate delay5">
+    <div class="chart-card">
+      <h3>学习状态分布</h3>
+      <div class="chart-container">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>月度入职人数趋势</h3>
+      <div class="chart-container">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bars -->
+  <div class="progress-bars animate delay6" id="progressSection">
+    <div class="section-header collapsed">
+      <h3 id="progressTitle">员工学习进度一览</h3>
+      <button class="btn-toggle" id="toggleProgress" onclick="toggleProgress()" aria-expanded="false">
+        <span>展开全部</span>
+        <span class="arrow">&#9662;</span>
+      </button>
+    </div>
+    <div class="progress-list-wrap" id="progressListWrap">
+      <div id="progressList"></div>
+    </div>
+  </div>
+
+  <!-- Detail Table -->
+  <div class="table-section animate delay6">
+    <div class="table-header">
+      <h3 id="tableTitle">员工学习明细</h3>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" class="search-box" id="searchBox" placeholder="搜索姓名/英文名..." oninput="renderTable()">
+        <button class="btn-export" onclick="exportCSV()">导出 CSV</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('no')" style="cursor:pointer">序号</th>
+            <th onclick="sortTable('name_cn')" style="cursor:pointer">姓名</th>
+            <th onclick="sortTable('name_en')" style="cursor:pointer">英文名</th>
+            <th onclick="sortTable('title')" style="cursor:pointer">职位</th>
+            <th onclick="sortTable('onboard_date')" style="cursor:pointer">入职日期</th>
+            <th onclick="sortTable('supervisor')" style="cursor:pointer">直接上级</th>
+            <th onclick="sortTable('progress_val')" style="cursor:pointer">学习进度</th>
+            <th onclick="sortTable('study_days')" style="cursor:pointer">学习天数</th>
+            <th>进度明细</th>
+            <th onclick="sortTable('feedback_score')" style="cursor:pointer">反馈评分</th>
+            <th>建议反馈</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="icon">&#128269;</div>
+      <p>该时间段内暂无员工数据</p>
+    </div>
+  </div>
+</div>
+
+<!-- Category Employee List Modal -->
+<div class="modal-overlay" id="catModal" onclick="closeCatModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="info">
+        <h2 id="catModalTitle">--</h2>
+        <p id="catModalSub" style="font-size:13px;color:var(--text2);">--</p>
+      </div>
+      <button class="modal-close" onclick="closeCatModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:0 28px 20px;">
+      <table class="cat-table" id="catTable">
+        <thead>
+          <tr>
+            <th style="width:36px">#</th>
+            <th>姓名</th>
+            <th>职位</th>
+            <th>直接上级</th>
+            <th>入职日期</th>
+          </tr>
+        </thead>
+        <tbody id="catTableBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeCatModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Employee Detail Modal -->
+<div class="modal-overlay" id="empModal" onclick="closeModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="info">
+        <h2 id="modalName">--</h2>
+        <p id="modalEnName">--</p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="dt-label">职位</div>
+          <div class="dt-value" id="modalTitle">--</div>
+        </div>
+        <div class="detail-item">
+          <div class="dt-label">部门</div>
+          <div class="dt-value" id="modalDept">--</div>
+        </div>
+        <div class="detail-item">
+          <div class="dt-label">入职日期</div>
+          <div class="dt-value" id="modalOnboard">--</div>
+        </div>
+        <div class="detail-item">
+          <div class="dt-label">直接上级</div>
+          <div class="dt-value" id="modalSupervisor">--</div>
+        </div>
+        <div class="detail-item">
+          <div class="dt-label">学习包发送日期</div>
+          <div class="dt-value" id="modalSendDate">--</div>
+        </div>
+        <div class="detail-item">
+          <div class="dt-label">学习天数</div>
+          <div class="dt-value" id="modalStudyDays">--</div>
+        </div>
+        <div class="detail-item full">
+          <div class="dt-label">学习进度</div>
+          <div class="dt-value big" id="modalProgressText" style="margin-bottom:8px;">--</div>
+          <div class="modal-progress">
+            <div class="fill" id="modalProgressBar" style="width:0%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text2);">
+            <span id="modalProgressDetail">--</span>
+            <span id="modalProgressPct">--</span>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="dt-label">反馈评分</div>
+          <div class="dt-value" id="modalScore">--</div>
+        </div>
+        <div class="detail-item full">
+          <div class="dt-label">建议反馈</div>
+          <div class="dt-value" id="modalComment" style="font-size:13px;line-height:1.6;color:var(--text2);">--</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const rawData = [{"no":1,"name_cn":"李盼","name_en":"Ivy Li","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-01-06","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":""},{"no":2,"name_cn":"黎金凤","name_en":"Ouniy Li","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-02-07","supervisor":"Helen Xu\n许小英","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":3,"name_cn":"霍思晴","name_en":"Alex Huo","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-02-17","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":4,"name_cn":"黄泓榆","name_en":"Candice Huang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-02-19","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":5,"name_cn":"袁微","name_en":"Christine Yuan","department":"Merchandising & Operations\n商务运营部","title":"Business Clerk\n商务文员","onboard_date":"2025-02-19","supervisor":"Helen Xu\n许小英","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"知识学习可能会了，但缺乏练习，可能容易忘记知识点。"},{"no":6,"name_cn":"连奋丽","name_en":"Candy Lian","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-02-21","supervisor":"Helen Xu\n许小英","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":7,"name_cn":"王蓓蓓","name_en":"Bella Wang","department":"Merchandising & Operations\n商务运营部","title":"Associate Merchandiser \n助理商务专员","onboard_date":"2025-02-24","supervisor":"Angela Xu\n徐兰","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"LC付款涉及的很多知识层面需要当面向熟手同事请教学习"},{"no":8,"name_cn":"缪靖霖","name_en":"Gillian Miau","department":"Merchandising & Operations\n商务运营部","title":"Merchandising Manager assistant\n商务经理助理","onboard_date":"2025-02-24","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":9,"name_cn":"王琼","name_en":"Joan Wang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser \n商务专员","onboard_date":"2025-02-24","supervisor":"Angela Xu\n徐兰","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":""},{"no":10,"name_cn":"陈霞","name_en":"Shirley Chen","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-02-28","supervisor":"Helen Xu\n许小英","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":3,"feedback_comment":""},{"no":11,"name_cn":"黄红","name_en":"Aimee Huang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-03-03","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":12,"name_cn":"钟梓华","name_en":"Babbit Zhong","department":"Merchandising & Operations\n商务运营部","title":"Business Clerk\n商务文员","onboard_date":"2025-03-05","supervisor":"Angela Xu\n徐兰","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":"对于系统可能会出现的报错有时候不知道原因和如何解决"},{"no":13,"name_cn":"陈轩轩","name_en":"Shery Chen","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-03-14","supervisor":"Cindy He\n贺慧芬","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":"培训的学习内容以及工作操作流程讲的很全面也很完善，后续有要了解的学习方面，会及时请教buddy或者leader"},{"no":14,"name_cn":"曾翠敏","name_en":"Flora Zeng","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-03-14","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":15,"name_cn":"杜婷婷","name_en":"Tina Du","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-03-17","supervisor":"Cindy He\n贺慧芬","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":""},{"no":16,"name_cn":"陈小燕","name_en":"Linda Chen","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-03-17","supervisor":"Angela Xu\n徐兰","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":17,"name_cn":"陈丽英","name_en":"Lydia Chen","department":"Merchandising & Operations\n商务运营部","title":"Business Clerk\n商务文员","onboard_date":"2025-03-17","supervisor":"Helen Xu\n许小英","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":18,"name_cn":"林洁琼","name_en":"Leona Lin","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-03-20","supervisor":"Angela Xu\n徐兰","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"希望增加工作中遇到需要特别注意的case案例"},{"no":19,"name_cn":"张婷婷","name_en":"Stephy Zhang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-03-20","supervisor":"Helen Xu\n许小英","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"还想了解学习关于跟单过程中遇到的一些比较典型问题的案例及怎么解决的"},{"no":20,"name_cn":"刘锦","name_en":"Candy Liu","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-03-24","supervisor":"Cindy He\n贺慧芬","send_date":"2025-03-24","study_days":427,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":""},{"no":21,"name_cn":"林妙军","name_en":"Angel Lin","department":"Merchandising & Operations\n商务运营部","title":"Associate Merchandiser \n助理商务专员","onboard_date":"2025-03-26","supervisor":"Helen Xu\n许小英","send_date":"2025-03-27","study_days":424,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"暂时没有疑惑，培训内容涵盖范围广且涉及面大，是作为merchandising部门要熟知的，但若从新人以及所处的小组等综合角度评价的话，要过一段时间才能完全接触培训所提及的某些内容或后面也不一定接触到，所以应有针对性以及分阶段去培训或许会更好？公司很多都是日新月异的，也会存在着培训内容未能及时同步的可能"},{"no":22,"name_cn":"梁慧苑","name_en":"Patsy Liang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-03-31","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-04-01","study_days":419,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":23,"name_cn":"杨成怡","name_en":"Amy Yang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-03-31","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-04-01","study_days":419,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":5,"feedback_comment":""},{"no":24,"name_cn":"李丽菊","name_en":"Vivi Li","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-04-02","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-04-02","study_days":418,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"更多关于产品的介绍，产品生产工艺的介绍。"},{"no":25,"name_cn":"黄颖","name_en":"Fiona Huang","department":"Merchandising & Operations\n商务运营部","title":"business clerk\n商务文员","onboard_date":"2025-04-02","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-04-02","study_days":418,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":""},{"no":26,"name_cn":"赵炜婷","name_en":"Amanda Zhao","department":"Merchandising & Operations\n商务运营部","title":"business clerk\n商务文员","onboard_date":"2025-04-02","supervisor":"Angela Xu\n徐兰","send_date":"2025-04-02","study_days":418,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":""},{"no":27,"name_cn":"谭小静","name_en":"Bella Tan","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-04-07","supervisor":"Helen Xu\n许小英","send_date":"2025-04-08","study_days":412,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"我对于有些SAP具体操作步骤不熟悉。不过相信实际操作过后就会明白。"},{"no":28,"name_cn":"夏茂筝","name_en":"Aaron Xia","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-04-14","supervisor":"Cindy He\n贺慧芬","send_date":"2025-04-15","study_days":405,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":""},{"no":29,"name_cn":"刘虹杏","name_en":"Meyya Liu","department":"Merchandising & Operations\n商务运营部","title":"Senior merchandiser\n高级商务专员","onboard_date":"2025-04-28","supervisor":"Angela Xu\n徐兰","send_date":"2025-04-29","study_days":391,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"具体细节待实践操作加强理解"},{"no":30,"name_cn":"胡喜凤","name_en":"Joyce Hu","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-05-12","supervisor":"Angela Xu\n徐兰","send_date":"2025-05-14","study_days":376,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"更多的产品品类介绍"},{"no":31,"name_cn":"何韵逸","name_en":"Grace He","department":"Merchandising & Operations\n商务运营部","title":"Senior merchandiser\n高级商务专员","onboard_date":"2025-06-04","supervisor":"Angela Xu\n徐兰","send_date":"2025-06-05","study_days":354,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":0,"feedback_comment":""},{"no":32,"name_cn":"黄美园","name_en":"Megan Huang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-09-15","supervisor":"Helen Xu\n许小英","send_date":"2025-09-15","study_days":252,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"MA扣减系统操作"},{"no":33,"name_cn":"李文静","name_en":"Kristin Li","department":"Merchandising & Operations\n商务运营部","title":"Business Clerk\n商务文员","onboard_date":"2025-09-22","supervisor":"Helen Xu\n许小英","send_date":"2025-09-24","study_days":243,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":0,"feedback_comment":""},{"no":34,"name_cn":"黄永琪","name_en":"Blanche Huang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-10-13","supervisor":"Helen Xu\n许小英","send_date":"2025-10-17","study_days":220,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":"更全面的产品知识以及更全面的生产线"},{"no":35,"name_cn":"杨嘉宝","name_en":"Curry Yang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-10-20","supervisor":"Helen Xu\n许小英","send_date":"2025-10-23","study_days":214,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":4,"feedback_comment":""},{"no":36,"name_cn":"刘淼琳","name_en":"Echo Liu","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-10-22","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-10-23","study_days":214,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":0,"feedback_comment":""},{"no":37,"name_cn":"臧漫","name_en":"Kico Zang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-11-14","supervisor":"Angela Xu\n徐兰","send_date":"2025-11-17","study_days":189,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":3,"feedback_comment":""},{"no":38,"name_cn":"肖惠玲","name_en":"Phoebe Xiao","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2025-11-24","supervisor":"Zita Pan\n潘丽珍","send_date":"2025-12-02","study_days":174,"progress_val":1,"progress_text":"已完成","progress_detail":"必修14/14","feedback_score":4,"feedback_comment":""},{"no":39,"name_cn":"连鸿敏","name_en":"Anna Lian","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-12-01","supervisor":"Angela Xu\n徐兰","send_date":"2025-12-02","study_days":174,"progress_val":1,"progress_text":"已完成","progress_detail":"必修14/14","feedback_score":5,"feedback_comment":""},{"no":40,"name_cn":"邓肖坚","name_en":"Jessie Deng","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-12-03","supervisor":"Cindy He\n贺慧芬","send_date":"2025-12-09","study_days":167,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":0,"feedback_comment":""},{"no":41,"name_cn":"赵丽婷","name_en":"Cherry Zhao","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2025-12-15","supervisor":"Cindy He\n贺慧芬","send_date":"2025-12-18","study_days":158,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":0,"feedback_comment":""},{"no":43,"name_cn":"张倩","name_en":"Grace Zhang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-01-05","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-01-06","study_days":139,"progress_val":1,"progress_text":"已完成","progress_detail":"必修14/14","feedback_score":0,"feedback_comment":""},{"no":44,"name_cn":"王晓文","name_en":"Wendy Wang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-03-02","supervisor":"Angela Xu\n徐兰","send_date":"2026-03-16","study_days":70,"progress_val":0.143,"progress_text":"进行中","progress_detail":"必修2/14","feedback_score":0,"feedback_comment":""},{"no":45,"name_cn":"叶楹楹","name_en":"Hailey Ye","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-03-09","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-03-16","study_days":70,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/11","feedback_score":0,"feedback_comment":""},{"no":46,"name_cn":"朱欢芳","name_en":"Alison Zhu","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-03-11","supervisor":"Angela Xu\n徐兰","send_date":"2026-03-16","study_days":70,"progress_val":0,"progress_text":"未参与","progress_detail":"","feedback_score":0,"feedback_comment":""},{"no":47,"name_cn":"周诺","name_en":"Zosia Zhou","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-03-13","supervisor":"Helen Xu\n许小英","send_date":"2026-03-16","study_days":70,"progress_val":0.429,"progress_text":"进行中","progress_detail":"必修6/14","feedback_score":0,"feedback_comment":""},{"no":48,"name_cn":"张佳琪","name_en":"Khaki Zhang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-03-13","supervisor":"Cindy He\n贺慧芬","send_date":"2026-03-16","study_days":70,"progress_val":0.429,"progress_text":"进行中","progress_detail":"必修6/14","feedback_score":0,"feedback_comment":""},{"no":49,"name_cn":"雷倩","name_en":"Faye Lei","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-03-16","supervisor":"Angela Xu\n徐兰","send_date":"2026-03-16","study_days":70,"progress_val":0,"progress_text":"未参与","progress_detail":"","feedback_score":0,"feedback_comment":""},{"no":50,"name_cn":"马荔","name_en":"Mary Ma","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-03-18","supervisor":"Helen Xu\n许小英","send_date":"2026-03-18","study_days":68,"progress_val":1,"progress_text":"已完成","progress_detail":"必修14/14","feedback_score":0,"feedback_comment":""},{"no":51,"name_cn":"易芸芳","name_en":"Nancy Yi","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-03-18","supervisor":"Helen Xu\n许小英","send_date":"2026-03-18","study_days":68,"progress_val":0.429,"progress_text":"进行中","progress_detail":"必修6/14","feedback_score":0,"feedback_comment":""},{"no":52,"name_cn":"杨溢","name_en":"Hallie Yang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-03-20","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-03-24","study_days":62,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/14","feedback_score":0,"feedback_comment":""},{"no":53,"name_cn":"王玉琳","name_en":"Kori Wang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-03-27","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-03-31","study_days":55,"progress_val":1,"progress_text":"已完成","progress_detail":"必修11/14","feedback_score":0,"feedback_comment":""},{"no":54,"name_cn":"吕红玉","name_en":"Dora Lv","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-03-27","supervisor":"Cindy He\n贺慧芬","send_date":"2026-03-31","study_days":55,"progress_val":0.429,"progress_text":"进行中","progress_detail":"必修6/14","feedback_score":0,"feedback_comment":""},{"no":55,"name_cn":"潘如月","name_en":"Lumina Pan","department":"Merchandising & Operations\n商务运营部","title":"Associate Merchandiser \n助理商务专员","onboard_date":"2026-03-30","supervisor":"Angela Xu\n徐兰","send_date":"2026-03-31","study_days":55,"progress_val":0,"progress_text":"未参加","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":56,"name_cn":"谢佩洁","name_en":"Peggy Xie","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-04-03","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-04-03","study_days":52,"progress_val":1,"progress_text":"已完成","progress_detail":"必修14/14","feedback_score":0,"feedback_comment":""},{"no":58,"name_cn":"曲垚霖","name_en":"Mary Qu","department":"Merchandising & Operations\n商务运营部","title":"Senior merchandiser\n高级商务专员","onboard_date":"2026-04-15","supervisor":"Angela Xu\n徐兰","send_date":"2026-04-20","study_days":35,"progress_val":0.357,"progress_text":"进行中","progress_detail":"必修5/14","feedback_score":0,"feedback_comment":""},{"no":59,"name_cn":"骆小花","name_en":"Rachel Luo","department":"Merchandising & Operations\n商务运营部","title":"Associate Merchandiser \n助理商务专员","onboard_date":"2026-04-20","supervisor":"Helen Xu\n许小英","send_date":"2026-04-20","study_days":35,"progress_val":0.5,"progress_text":"进行中","progress_detail":"必修7/14","feedback_score":0,"feedback_comment":""},{"no":60,"name_cn":"张炯芬","name_en":"Winnie Zhang","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-04-20","supervisor":"Cindy He\n贺慧芬","send_date":"2026-04-20","study_days":35,"progress_val":0,"progress_text":"未参加","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":61,"name_cn":"郭丽辉","name_en":"Peggy Guo","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-04-20","supervisor":"Angela Xu\n徐兰","send_date":"2026-04-20","study_days":35,"progress_val":1,"progress_text":"已完成","progress_detail":"必修14/14","feedback_score":0,"feedback_comment":""},{"no":62,"name_cn":"汤霞","name_en":"Shelly Tang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-04-22","supervisor":"Helen Xu\n许小英","send_date":"2026-04-24","study_days":31,"progress_val":0.857,"progress_text":"进行中","progress_detail":"必修12/14","feedback_score":0,"feedback_comment":""},{"no":64,"name_cn":"陈晓香","name_en":"Ellen Chen","department":"Merchandising & Operations\n商务运营部","title":"Associate Merchandiser \n助理商务专员","onboard_date":"2026-04-24","supervisor":"Helen Xu\n许小英","send_date":"2026-04-24","study_days":31,"progress_val":0,"progress_text":"进行中","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":65,"name_cn":"谭艳玲","name_en":"Breeze Tan","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-04-27","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-04-28","study_days":27,"progress_val":0.429,"progress_text":"进行中","progress_detail":"必修6/14","feedback_score":0,"feedback_comment":""},{"no":66,"name_cn":"梁夏梅","name_en":"Judy Liang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-04-27","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-05-06","study_days":19,"progress_val":0.571,"progress_text":"进行中","progress_detail":"必修8/14","feedback_score":0,"feedback_comment":""},{"no":67,"name_cn":"邓瑶","name_en":"Yao Deng","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-04-27","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-05-06","study_days":19,"progress_val":0.429,"progress_text":"进行中","progress_detail":"必修6/14","feedback_score":0,"feedback_comment":""},{"no":68,"name_cn":"黄楚君","name_en":"Joy Huang","department":"Merchandising & Operations\n商务运营部","title":"Associate Merchandiser \n助理商务专员","onboard_date":"2026-05-06","supervisor":"Helen Xu\n许小英","send_date":"2026-05-06","study_days":19,"progress_val":0,"progress_text":"进行中","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":69,"name_cn":"周怡","name_en":"Lucy Zhou","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-05-06","supervisor":"Cindy He\n贺慧芬","send_date":"2026-05-06","study_days":19,"progress_val":0,"progress_text":"未参加","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":70,"name_cn":"李海兰","name_en":"Kally Li","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-05-13","supervisor":"Helen Xu\n许小英","send_date":"2026-05-15","study_days":10,"progress_val":0,"progress_text":"进行中","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":71,"name_cn":"张小芬","name_en":"Echo Zhang","department":"Merchandising & Operations\n商务运营部","title":"Merchandiser\n商务专员","onboard_date":"2026-05-18","supervisor":"Helen Xu\n许小英","send_date":"2026-05-18","study_days":7,"progress_val":0.714,"progress_text":"进行中","progress_detail":"必修10/14","feedback_score":0,"feedback_comment":""},{"no":72,"name_cn":"谢窈","name_en":"Sawning Xie","department":"Merchandising & Operations\n商务运营部","title":"Junior Merchandiser\n初级商务专员","onboard_date":"2026-05-25","supervisor":"Helen Xu\n许小英","send_date":"2026-05-25","study_days":0,"progress_val":0,"progress_text":"未参加","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":73,"name_cn":"陈雨晴","name_en":"Ashley Chen","department":"Merchandising & Operations\n商务运营部","title":"Business Clerk\n商务文员","onboard_date":"2026-05-25","supervisor":"Helen Xu\n许小英","send_date":"2026-05-25","study_days":0,"progress_val":0,"progress_text":"未参加","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":74,"name_cn":"林颖芝","name_en":"Angie Lin","department":"Merchandising & Operations\n商务运营部","title":"MT-Merchandising & Operations\n商务运营管培生","onboard_date":"2026-05-25","supervisor":"Angela Xu\n徐兰","send_date":"2026-05-25","study_days":0,"progress_val":0,"progress_text":"未参加","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""},{"no":75,"name_cn":"赖子悦","name_en":"Arya Lai","department":"Merchandising & Operations\n商务运营部","title":"MT-Merchandising & Operations\n商务运营管培生","onboard_date":"2026-05-25","supervisor":"Zita Pan\n潘丽珍","send_date":"2026-05-25","study_days":0,"progress_val":0,"progress_text":"未参加","progress_detail":"必修0/14","feedback_score":0,"feedback_comment":""}];
+
+// ==================== STATE ====================
+let filteredData = [...rawData];
+let sortKey = 'onboard_date';
+let sortAsc = true;
+let statusChart = null;
+let monthlyChart = null;
+
+// ==================== HELPERS ====================
+function getStatusCategory(emp) {
+  const t = emp.progress_text;
+  if (t === '已完成') return 'complete';
+  if (t === '进行中') return 'in-progress';
+  if (t === '未参与' || t === '未参加') return 'not-joined';
+  return 'not-started';
+}
+
+function getStatusLabel(cat) {
+  return { complete: '已完成', 'in-progress': '进行中', 'not-joined': '未参与', 'not-started': '未开始' }[cat] || '未知';
+}
+
+function getBarClass(cat) {
+  return { complete: 'complete', 'in-progress': 'in-progress', 'not-joined': 'not-joined', 'not-started': 'not-started' }[cat] || '';
+}
+
+function getBarColor(cat) {
+  return { complete: '#22c55e', 'in-progress': '#3b82f6', 'not-joined': '#ef4444', 'not-started': '#64748b' }[cat] || '#64748b';
+}
+
+function getBadgeClass(cat) {
+  return { complete: 'complete', 'in-progress': 'in-progress', 'not-joined': 'not-joined', 'not-started': 'not-started' }[cat] || '';
+}
+
+/* Percentage-based bar colors: 0%=red, 100%=green, others=blue */
+function getPctBarClass(pct) {
+  if (pct === 0) return 'pct-0';
+  if (pct === 100) return 'pct-100';
+  return 'pct-mid';
+}
+function getPctBarColor(pct) {
+  if (pct === 0) return '#ef4444';
+  if (pct === 100) return '#22c55e';
+  return '#3b82f6';
+}
+
+function stars(score) {
+  if (!score) return '<span style="color:#475569">-</span>';
+  let s = '';
+  for (let i = 0; i < 5; i++) s += i < score ? '★' : '☆';
+  return '<span class="score-stars">' + s + '</span>';
+}
+
+function clean(str) {
+  return (str || '').replace(/\n/g, ' ').trim();
+}
+
+// ==================== FILTER ====================
+function applyFilter() {
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+  filteredData = rawData.filter(d => {
+    return d.onboard_date >= from && d.onboard_date <= to;
+  });
+  document.querySelectorAll('.quick-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.from === from && btn.dataset.to === to);
+  });
+  renderAll();
+}
+
+function resetFilter() {
+  document.getElementById('dateFrom').value = '2025-01-01';
+  document.getElementById('dateTo').value = '2026-12-31';
+  document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.quick-btn[data-from="2025-01-01"][data-to="2026-12-31"]').classList.add('active');
+  filteredData = [...rawData];
+  renderAll();
+}
+
+document.querySelectorAll('.quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('dateFrom').value = btn.dataset.from;
+    document.getElementById('dateTo').value = btn.dataset.to;
+    applyFilter();
+  });
+});
+
+// ==================== PROGRESS TOGGLE ====================
+function toggleProgress() {
+  const wrap = document.getElementById('progressListWrap');
+  const btn = document.getElementById('toggleProgress');
+  const isExpanded = wrap.classList.toggle('expanded');
+  btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+  btn.querySelector('span:first-child').textContent = isExpanded ? '收起全部' : '展开全部';
+}
+
+// ==================== MODAL ====================
+function openModal(emp) {
+  document.getElementById('modalName').textContent = emp.name_cn;
+  document.getElementById('modalEnName').textContent = emp.name_en;
+  document.getElementById('modalTitle').textContent = clean(emp.title);
+  document.getElementById('modalDept').textContent = clean(emp.department);
+  document.getElementById('modalOnboard').textContent = emp.onboard_date;
+  document.getElementById('modalSupervisor').textContent = clean(emp.supervisor);
+  document.getElementById('modalSendDate').textContent = emp.send_date;
+  document.getElementById('modalStudyDays').textContent = emp.study_days + ' 天';
+
+  const cat = getStatusCategory(emp);
+  const pct = Math.round(emp.progress_val * 100);
+  const modalBarColor = getPctBarColor(pct);
+  document.getElementById('modalProgressText').textContent = emp.progress_text;
+  document.getElementById('modalProgressText').style.color = modalBarColor;
+  document.getElementById('modalProgressBar').style.width = Math.max(pct, 2) + '%';
+  document.getElementById('modalProgressBar').style.background = modalBarColor;
+  document.getElementById('modalProgressDetail').textContent = emp.progress_detail || '-';
+  document.getElementById('modalProgressPct').textContent = pct + '%';
+
+  if (emp.feedback_score > 0) {
+    document.getElementById('modalScore').innerHTML = stars(emp.feedback_score) + ' <span style="color:var(--text2);font-size:12px;">(' + emp.feedback_score + '/5)</span>';
+  } else {
+    document.getElementById('modalScore').textContent = '暂无评分';
+  }
+  document.getElementById('modalComment').textContent = emp.feedback_comment || '暂无反馈';
+
+  document.getElementById('empModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(event) {
+  if (event && event.target !== document.getElementById('empModal')) return;
+  document.getElementById('empModal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function setCatTableHeaders(type) {
+  const thead = document.querySelector('#catTable thead tr');
+  if (type === 'feedback') {
+    thead.innerHTML = '<th style="width:36px">#</th><th>姓名</th><th>职位</th><th>评分</th><th>反馈内容</th>';
+  } else {
+    thead.innerHTML = '<th style="width:36px">#</th><th>姓名</th><th>职位</th><th>直接上级</th><th>入职日期</th>';
+  }
+}
+
+function resetCatModalTable() {
+  const modalBody = document.querySelector('#catModal .modal-body');
+  modalBody.innerHTML = '<table class="cat-table" id="catTable"><thead><tr><th style="width:36px">#</th><th>姓名</th><th>职位</th><th>直接上级</th><th>入职日期</th></tr></thead><tbody id="catTableBody"></tbody></table>';
+}
+
+function showSummaryDetail(cat) {
+  if (cat === 'all') {
+    document.getElementById('searchBox').value = '';
+    renderTable();
+    document.querySelector('.table-section').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  const list = filteredData.filter(d => getStatusCategory(d) === cat);
+  if (list.length === 0) return;
+
+  resetCatModalTable();
+  setCatTableHeaders('default');
+  const catLabels = { complete: '已完成学习', 'in-progress': '学习进行中', 'not-joined': '未参与学习' };
+  document.getElementById('catModalTitle').textContent = catLabels[cat] || cat;
+  document.getElementById('catModalSub').textContent = '共 ' + list.length + ' 人';
+
+  const tbody = document.getElementById('catTableBody');
+  tbody.innerHTML = list.map((emp, i) => `<tr>
+    <td>${i + 1}</td>
+    <td><strong>${emp.name_cn}</strong> <span style="color:var(--text2);font-size:12px;">${emp.name_en}</span></td>
+    <td>${clean(emp.title)}</td>
+    <td>${clean(emp.supervisor)}</td>
+    <td>${emp.onboard_date}</td>
+  </tr>`).join('');
+
+  document.getElementById('catModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCatModal(event) {
+  if (event && event.target !== document.getElementById('catModal')) return;
+  document.getElementById('catModal').classList.remove('active');
+  document.body.style.overflow = '';
+  // Reset modal body for next use
+  setTimeout(() => {
+    document.querySelector('#catModal .modal-card').classList.remove('wide');
+    const modalBody = document.querySelector('#catModal .modal-body');
+    modalBody.innerHTML = '<table class="cat-table" id="catTable"><thead><tr><th style="width:36px">#</th><th>姓名</th><th>职位</th><th>直接上级</th><th>入职日期</th></tr></thead><tbody id="catTableBody"></tbody></table>';
+  }, 300);
+}
+
+function showFeedbackDetail() {
+  const list = filteredData.filter(d => d.feedback_score > 0 && d.feedback_comment && d.feedback_comment.trim());
+  if (list.length === 0) return;
+
+  document.getElementById('catModalTitle').textContent = '员工反馈详情';
+  document.getElementById('catModalSub').textContent = '共 ' + list.length + ' 条反馈';
+
+  const modalBody = document.querySelector('#catModal .modal-body');
+  modalBody.innerHTML = '<div class="feedback-list">' + list.map(emp => {
+    const initial = emp.name_cn.charAt(0);
+    return `<div class="feedback-card">
+      <div class="fb-header">
+        <div class="fb-person">
+          <div class="fb-avatar">${initial}</div>
+          <div>
+            <div class="fb-name">${emp.name_cn} <span style="color:var(--text2);font-weight:400;">(${emp.name_en})</span></div>
+            <div class="fb-title">${clean(emp.title)}</div>
+          </div>
+        </div>
+        <div class="fb-score" style="color:var(--yellow);">${stars(emp.feedback_score)}</div>
+      </div>
+      <div class="fb-body">${emp.feedback_comment}</div>
+    </div>`;
+  }).join('') + '</div>';
+
+  document.querySelector('#catModal .modal-card').classList.add('wide');
+  document.getElementById('catModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+// ==================== RENDER ====================
+function renderAll() {
+  renderSummary();
+  renderStatusChart();
+  renderMonthlyChart();
+  renderProgressBars();
+  renderTable();
+}
+
+function renderSummary() {
+  const total = filteredData.length;
+  const completed = filteredData.filter(d => getStatusCategory(d) === 'complete').length;
+  const inProgress = filteredData.filter(d => getStatusCategory(d) === 'in-progress').length;
+  const notJoined = filteredData.filter(d => getStatusCategory(d) === 'not-joined').length;
+  const scored = filteredData.filter(d => d.feedback_score > 0);
+  const avgScore = scored.length ? (scored.reduce((s, d) => s + d.feedback_score, 0) / scored.length).toFixed(1) : '-';
+
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('dateRange').textContent = document.getElementById('dateFrom').value + ' ~ ' + document.getElementById('dateTo').value;
+  document.getElementById('completedCount').textContent = completed;
+  document.getElementById('completedPct').textContent = total ? Math.round(completed / total * 100) + '% 完成率' : '';
+  document.getElementById('inProgressCount').textContent = inProgress;
+  document.getElementById('inProgressPct').textContent = total ? Math.round(inProgress / total * 100) + '% 占比' : '';
+  document.getElementById('notJoinedCount').textContent = notJoined;
+  document.getElementById('notJoinedPct').textContent = total ? Math.round(notJoined / total * 100) + '% 占比' : '';
+  document.getElementById('avgScore').textContent = avgScore;
+  document.getElementById('feedbackCount').textContent = scored.length + ' 人已评分';
+}
+
+function renderStatusChart() {
+  const completed = filteredData.filter(d => getStatusCategory(d) === 'complete').length;
+  const inProgress = filteredData.filter(d => getStatusCategory(d) === 'in-progress').length;
+  const notJoined = filteredData.filter(d => getStatusCategory(d) === 'not-joined').length;
+
+  const ctx = document.getElementById('statusChart').getContext('2d');
+  if (statusChart) statusChart.destroy();
+  statusChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['已完成', '进行中', '未参与'],
+      datasets: [{
+        data: [completed, inProgress, notJoined],
+        backgroundColor: ['#22c55e', '#3b82f6', '#ef4444'],
+        borderWidth: 0,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#94a3b8', padding: 16, font: { size: 13 }, usePointStyle: true, pointStyleWidth: 12 }
+        }
+      }
+    }
+  });
+}
+
+function renderMonthlyChart() {
+  const monthMap = {};
+  const monthEmployees = {};
+  filteredData.forEach(d => {
+    const m = d.onboard_date.substring(0, 7);
+    monthMap[m] = (monthMap[m] || 0) + 1;
+    if (!monthEmployees[m]) monthEmployees[m] = [];
+    monthEmployees[m].push(d);
+  });
+  const months = Object.keys(monthMap).sort();
+  const counts = months.map(m => monthMap[m]);
+  const labels = months.map(m => m.replace('-', '年') + '月');
+
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+  if (monthlyChart) monthlyChart.destroy();
+  monthlyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '入职人数',
+        data: counts,
+        backgroundColor: 'rgba(59,130,246,0.6)',
+        borderColor: '#3b82f6',
+        borderWidth: 1,
+        borderRadius: 6,
+        hoverBackgroundColor: 'rgba(59,130,246,0.8)'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (evt, elements) => {
+        if (elements.length === 0) return;
+        const idx = elements[0].index;
+        const monthKey = months[idx];
+        showMonthDetail(monthKey, monthEmployees[monthKey], labels[idx]);
+      },
+      onHover: (evt, elements) => {
+        evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            afterLabel: () => '点击查看该月员工列表'
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 45 },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#94a3b8', stepSize: 1 },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        }
+      }
+    }
+  });
+}
+
+function showMonthDetail(monthKey, list, label) {
+  if (!list || list.length === 0) return;
+  resetCatModalTable();
+  setCatTableHeaders('default');
+  document.getElementById('catModalTitle').textContent = label + ' 入职员工';
+  document.getElementById('catModalSub').textContent = '共 ' + list.length + ' 人';
+
+  const tbody = document.getElementById('catTableBody');
+  tbody.innerHTML = list.map((emp, i) => `<tr>
+    <td>${i + 1}</td>
+    <td><strong>${emp.name_cn}</strong> <span style="color:var(--text2);font-size:12px;">${emp.name_en}</span></td>
+    <td>${clean(emp.title)}</td>
+    <td>${clean(emp.supervisor)}</td>
+    <td>${emp.onboard_date}</td>
+  </tr>`).join('');
+
+  document.getElementById('catModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function renderProgressBars() {
+  const sorted = [...filteredData].sort((a, b) => b.progress_val - a.progress_val);
+  const container = document.getElementById('progressList');
+  container.innerHTML = '';
+
+  sorted.forEach((emp, i) => {
+    const pct = Math.round(emp.progress_val * 100);
+    const barCls = getPctBarClass(pct);
+    const barClr = getPctBarColor(pct);
+    const item = document.createElement('div');
+    item.className = 'progress-item';
+    item.style.animationDelay = (i * 0.02) + 's';
+    item.innerHTML = `
+      <span class="emp-name" title="${emp.name_cn} ${emp.name_en}">${emp.name_cn}<br><span style="font-size:11px;color:var(--text2);opacity:0.7;">${emp.name_en}</span></span>
+      <div class="bar-bg">
+        <div class="bar-fill ${barCls}" style="width: ${Math.max(pct, 2)}%">${pct > 15 ? pct + '%' : ''}</div>
+      </div>
+      <span class="pct" style="color:${barClr}">${pct}%</span>
+      <span class="detail">${emp.progress_detail || emp.progress_text}</span>
+    `;
+    item.addEventListener('click', () => openModal(emp));
+    container.appendChild(item);
+  });
+
+  document.getElementById('progressTitle').textContent = '员工学习进度一览 (' + sorted.length + ' 人)';
+}
+
+function sortTable(key) {
+  if (sortKey === key) {
+    sortAsc = !sortAsc;
+  } else {
+    sortKey = key;
+    sortAsc = true;
+  }
+  renderTable();
+}
+
+function renderTable() {
+  const search = (document.getElementById('searchBox').value || '').toLowerCase();
+  let data = filteredData.filter(d => {
+    if (!search) return true;
+    return d.name_cn.toLowerCase().includes(search) || d.name_en.toLowerCase().includes(search);
+  });
+
+  data.sort((a, b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (typeof va === 'number') return sortAsc ? va - vb : vb - va;
+    va = (va || '').toString(); vb = (vb || '').toString();
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+
+  if (data.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = data.map(emp => {
+    const cat = getStatusCategory(emp);
+    const pct = Math.round(emp.progress_val * 100);
+    const barColor = getPctBarColor(pct);
+    return `<tr>
+      <td>${emp.no}</td>
+      <td><strong>${emp.name_cn}</strong></td>
+      <td>${emp.name_en}</td>
+      <td>${clean(emp.title)}</td>
+      <td>${emp.onboard_date}</td>
+      <td>${clean(emp.supervisor)}</td>
+      <td>
+        <span class="progress-mini"><div class="fill" style="width:${pct}%;background:${barColor}"></div></span>
+        <span class="status-badge ${getBadgeClass(cat)}">${getStatusLabel(cat)}</span>
+      </td>
+      <td>${emp.study_days} 天</td>
+      <td>${emp.progress_detail || '-'}</td>
+      <td>${stars(emp.feedback_score)}</td>
+      <td class="feedback-text">${emp.feedback_comment || '-'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableTitle').textContent = `员工学习明细 (${data.length} 人)`;
+}
+
+// ==================== EXPORT ====================
+function exportCSV() {
+  const headers = ['序号','姓名','英文名','职位','入职日期','直接上级','学习进度','进度明细','学习天数','反馈评分','建议反馈'];
+  const rows = filteredData.map(d => [
+    d.no, d.name_cn, d.name_en, clean(d.title), d.onboard_date, clean(d.supervisor),
+    d.progress_text + ' ' + Math.round(d.progress_val*100) + '%',
+    d.progress_detail, d.study_days, d.feedback_score, d.feedback_comment
+  ]);
+  const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Merchandising_Learning_Report.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ==================== INIT ====================
+(function setUpdateDate() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  document.getElementById('updateDate').textContent = y + '-' + m + '-' + d;
+})();
+renderAll();
+</script>
+</body>
+</html>
