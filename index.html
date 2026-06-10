@@ -782,6 +782,48 @@
     border-left: 3px solid var(--accent);
   }
 
+  /* Column Filter Dropdown */
+  .col-filter-btn {
+    background: none; border: none; color: rgba(255,255,255,0.5);
+    font-size: 9px; cursor: pointer; margin-left: 3px;
+    padding: 0 2px; transition: color 0.2s; vertical-align: middle;
+    line-height: 1;
+  }
+  .col-filter-btn:hover { color: #fff; }
+  .col-filter-btn.active { color: #fbbf24; }
+  .col-filter-popup {
+    position: absolute; top: calc(100% + 2px); left: 50%;
+    transform: translateX(-50%); z-index: 200;
+    background: var(--bg2); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 6px 0; min-width: 160px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    display: none; max-height: 280px; overflow-y: auto;
+  }
+  .col-filter-popup.show { display: block; }
+  .filter-popup-header {
+    padding: 4px 12px 6px; font-size: 11px; font-weight: 600;
+    color: var(--text2); border-bottom: 1px solid rgba(255,255,255,0.06);
+    text-transform: none; letter-spacing: 0;
+  }
+  .filter-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px; font-size: 12px; color: var(--text);
+    cursor: pointer; white-space: nowrap;
+  }
+  .filter-option:hover { background: rgba(59,130,246,0.1); }
+  .filter-option input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); margin: 0; }
+  .filter-popup-actions {
+    display: flex; gap: 6px; padding: 6px 12px;
+    border-top: 1px solid rgba(255,255,255,0.06); margin-top: 2px;
+  }
+  .filter-popup-actions button {
+    flex: 1; padding: 5px 8px; font-size: 11px;
+    border-radius: 5px; border: none; cursor: pointer; font-weight: 500;
+  }
+  .filter-ok { background: var(--accent); color: #fff; }
+  .filter-clear { background: var(--bg3); color: var(--text2); }
+  .filter-popup-actions button:hover { opacity: 0.85; }
+
   @media (max-width: 768px) {
     .filter-bar, .main { padding-left: 16px; padding-right: 16px; }
     .header { padding: 20px 16px 16px; }
@@ -892,17 +934,50 @@
       <table>
         <thead>
           <tr>
-            <th onclick="sortTable('no')" style="cursor:pointer">序号</th>
-            <th onclick="sortTable('name_cn')" style="cursor:pointer">姓名</th>
-            <th onclick="sortTable('name_en')" style="cursor:pointer">英文名</th>
-            <th onclick="sortTable('title')" style="cursor:pointer">职位</th>
-            <th onclick="sortTable('onboard_date')" style="cursor:pointer">入职日期</th>
-            <th onclick="sortTable('supervisor')" style="cursor:pointer">直接上级</th>
-            <th onclick="sortTable('progress_val')" style="cursor:pointer">学习进度</th>
-            <th onclick="sortTable('study_days')" style="cursor:pointer">学习天数</th>
-            <th>进度明细</th>
-            <th onclick="sortTable('feedback_score')" style="cursor:pointer">反馈评分</th>
-            <th>建议反馈</th>
+            <th onclick="sortTable('no')" style="cursor:pointer">
+              序号 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('no',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-no"></div>
+            </th>
+            <th onclick="sortTable('name_cn')" style="cursor:pointer">
+              姓名 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('name_cn',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-name_cn"></div>
+            </th>
+            <th onclick="sortTable('name_en')" style="cursor:pointer">
+              英文名 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('name_en',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-name_en"></div>
+            </th>
+            <th onclick="sortTable('title')" style="cursor:pointer">
+              职位 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('title',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-title"></div>
+            </th>
+            <th onclick="sortTable('onboard_date')" style="cursor:pointer">
+              入职日期 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('onboard_date',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-onboard_date"></div>
+            </th>
+            <th onclick="sortTable('supervisor')" style="cursor:pointer">
+              直接上级 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('supervisor',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-supervisor"></div>
+            </th>
+            <th onclick="sortTable('progress_val')" style="cursor:pointer">
+              学习进度 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('progress_text',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-progress_text"></div>
+            </th>
+            <th onclick="sortTable('study_days')" style="cursor:pointer">
+              学习天数 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('study_days',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-study_days"></div>
+            </th>
+            <th>
+              进度明细 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('progress_detail',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-progress_detail"></div>
+            </th>
+            <th onclick="sortTable('feedback_score')" style="cursor:pointer">
+              反馈评分 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('feedback_score',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-feedback_score"></div>
+            </th>
+            <th>
+              建议反馈 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('feedback_comment',event)">&#9660;</button>
+              <div class="col-filter-popup" id="filter-popup-feedback_comment"></div>
+            </th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -1018,6 +1093,8 @@ let sortKey = 'onboard_date';
 let sortAsc = true;
 let statusChart = null;
 let monthlyChart = null;
+let columnFilters = {}; // { key: Set([values]) }
+let activeFilterPopup = null;
 
 // ==================== HELPERS ====================
 function getStatusCategory(emp) {
@@ -1071,13 +1148,10 @@ function clean(str) {
 function applyFilter() {
   const from = document.getElementById('dateFrom').value;
   const to = document.getElementById('dateTo').value;
-  filteredData = rawData.filter(d => {
-    return d.onboard_date >= from && d.onboard_date <= to;
-  });
   document.querySelectorAll('.quick-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.from === from && btn.dataset.to === to);
   });
-  renderAll();
+  applyAllFilters();
 }
 
 function resetFilter() {
@@ -1085,9 +1159,147 @@ function resetFilter() {
   document.getElementById('dateTo').value = '2026-12-31';
   document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelector('.quick-btn[data-from="2025-01-01"][data-to="2026-12-31"]').classList.add('active');
+  columnFilters = {};
+  document.querySelectorAll('.col-filter-btn').forEach(b => b.classList.remove('active'));
   filteredData = [...rawData];
   renderAll();
 }
+
+// ==================== COLUMN FILTER ====================
+function getFilterValues(key) {
+  const values = new Set();
+  filteredData.forEach(d => {
+    let v = d[key];
+    if (key === 'title' || key === 'supervisor') v = clean(v);
+    if (key === 'feedback_score') v = v ? String(v) + ' 星' : '未评分';
+    if (key === 'feedback_comment') v = (v && v.trim()) ? '有反馈' : '无反馈';
+    if (v !== undefined && v !== null && v !== '') values.add(String(v));
+  });
+  return Array.from(values).sort((a, b) => a.localeCompare(b, 'zh'));
+}
+
+function toggleColumnFilter(key, event) {
+  const popupId = 'filter-popup-' + key;
+  const popup = document.getElementById(popupId);
+  if (!popup) return;
+
+  // Close current popup if different
+  if (activeFilterPopup && activeFilterPopup !== popup) {
+    activeFilterPopup.classList.remove('show');
+  }
+
+  const isOpen = popup.classList.contains('show');
+  if (isOpen) {
+    popup.classList.remove('show');
+    activeFilterPopup = null;
+    return;
+  }
+
+  popup.innerHTML = buildFilterPopup(key);
+  popup.classList.add('show');
+  activeFilterPopup = popup;
+
+  // Position fix: ensure popup stays within viewport
+  setTimeout(() => {
+    const rect = popup.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) {
+      popup.style.left = 'auto';
+      popup.style.right = '0';
+      popup.style.transform = 'none';
+    }
+    if (rect.left < 8) {
+      popup.style.left = '0';
+      popup.style.transform = 'none';
+    }
+  }, 0);
+}
+
+function buildFilterPopup(key) {
+  const values = getFilterValues(key);
+  const selected = columnFilters[key] || new Set();
+  const keyLabels = {
+    no: '序号', name_cn: '姓名', name_en: '英文名', title: '职位',
+    onboard_date: '入职日期', supervisor: '直接上级', progress_text: '学习进度',
+    study_days: '学习天数', progress_detail: '进度明细', feedback_score: '反馈评分',
+    feedback_comment: '建议反馈'
+  };
+
+  let html = '<div class="filter-popup-header">筛选: ' + (keyLabels[key] || key) + '</div>';
+  if (values.length === 0) {
+    html += '<div class="filter-option" style="color:var(--text2)">暂无数据</div>';
+  } else {
+    values.forEach(v => {
+      const checked = selected.has(v) ? 'checked' : '';
+      html += '<label class="filter-option"><input type="checkbox" ' + checked + ' value="' + v.replace(/"/g, '&quot;') + '" onchange="updateColumnFilter(\'' + key + '\',this)"> ' + v + '</label>';
+    });
+  }
+  html += '<div class="filter-popup-actions">';
+  html += '<button class="filter-clear" onclick="clearColumnFilter(\'' + key + '\')">清除</button>';
+  html += '<button class="filter-ok" onclick="closeFilterPopup()">确定</button>';
+  html += '</div>';
+  return html;
+}
+
+function updateColumnFilter(key, checkbox) {
+  if (!columnFilters[key]) columnFilters[key] = new Set();
+  if (checkbox.checked) {
+    columnFilters[key].add(checkbox.value);
+  } else {
+    columnFilters[key].delete(checkbox.value);
+  }
+  if (columnFilters[key].size === 0) delete columnFilters[key];
+  applyAllFilters();
+}
+
+function clearColumnFilter(key) {
+  delete columnFilters[key];
+  const btn = document.querySelector('button[onclick*="toggleColumnFilter(\'' + key + '\'"');
+  if (btn) btn.classList.remove('active');
+  applyAllFilters();
+  closeFilterPopup();
+}
+
+function closeFilterPopup() {
+  if (activeFilterPopup) {
+    activeFilterPopup.classList.remove('show');
+    activeFilterPopup = null;
+  }
+}
+
+function applyAllFilters() {
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+
+  filteredData = rawData.filter(d => {
+    // Date filter
+    if (d.onboard_date < from || d.onboard_date > to) return false;
+    // Column filters
+    for (const [key, selected] of Object.entries(columnFilters)) {
+      if (selected.size === 0) continue;
+      let val = d[key];
+      if (key === 'title' || key === 'supervisor') val = clean(val);
+      if (key === 'feedback_score') val = val ? String(val) + ' 星' : '未评分';
+      if (key === 'feedback_comment') val = (val && val.trim()) ? '有反馈' : '无反馈';
+      if (!selected.has(String(val))) return false;
+    }
+    return true;
+  });
+
+  // Update filter button active states
+  for (const key of Object.keys(columnFilters)) {
+    const btn = document.querySelector('button[onclick*="toggleColumnFilter(\'' + key + '\'"');
+    if (btn) btn.classList.add('active');
+  }
+
+  renderAll();
+}
+
+// Close popup on outside click
+document.addEventListener('click', (e) => {
+  if (activeFilterPopup && !e.target.closest('.col-filter-popup') && !e.target.closest('.col-filter-btn')) {
+    closeFilterPopup();
+  }
+});
 
 document.querySelectorAll('.quick-btn').forEach(btn => {
   btn.addEventListener('click', () => {
