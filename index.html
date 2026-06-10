@@ -935,47 +935,47 @@
         <thead>
           <tr>
             <th onclick="sortTable('no')" style="cursor:pointer">
-              序号 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('no',event)">&#9660;</button>
+              序号 <button class="col-filter-btn" data-filter-key="no" onclick="event.stopPropagation();toggleColumnFilter('no',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-no"></div>
             </th>
             <th onclick="sortTable('name_cn')" style="cursor:pointer">
-              姓名 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('name_cn',event)">&#9660;</button>
+              姓名 <button class="col-filter-btn" data-filter-key="name_cn" onclick="event.stopPropagation();toggleColumnFilter('name_cn',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-name_cn"></div>
             </th>
             <th onclick="sortTable('name_en')" style="cursor:pointer">
-              英文名 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('name_en',event)">&#9660;</button>
+              英文名 <button class="col-filter-btn" data-filter-key="name_en" onclick="event.stopPropagation();toggleColumnFilter('name_en',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-name_en"></div>
             </th>
             <th onclick="sortTable('title')" style="cursor:pointer">
-              职位 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('title',event)">&#9660;</button>
+              职位 <button class="col-filter-btn" data-filter-key="title" onclick="event.stopPropagation();toggleColumnFilter('title',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-title"></div>
             </th>
             <th onclick="sortTable('onboard_date')" style="cursor:pointer">
-              入职日期 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('onboard_date',event)">&#9660;</button>
+              入职日期 <button class="col-filter-btn" data-filter-key="onboard_date" onclick="event.stopPropagation();toggleColumnFilter('onboard_date',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-onboard_date"></div>
             </th>
             <th onclick="sortTable('supervisor')" style="cursor:pointer">
-              直接上级 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('supervisor',event)">&#9660;</button>
+              直接上级 <button class="col-filter-btn" data-filter-key="supervisor" onclick="event.stopPropagation();toggleColumnFilter('supervisor',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-supervisor"></div>
             </th>
             <th onclick="sortTable('progress_val')" style="cursor:pointer">
-              学习进度 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('progress_text',event)">&#9660;</button>
+              学习进度 <button class="col-filter-btn" data-filter-key="progress_text" onclick="event.stopPropagation();toggleColumnFilter('progress_text',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-progress_text"></div>
             </th>
             <th onclick="sortTable('study_days')" style="cursor:pointer">
-              学习天数 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('study_days',event)">&#9660;</button>
+              学习天数 <button class="col-filter-btn" data-filter-key="study_days" onclick="event.stopPropagation();toggleColumnFilter('study_days',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-study_days"></div>
             </th>
             <th>
-              进度明细 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('progress_detail',event)">&#9660;</button>
+              进度明细 <button class="col-filter-btn" data-filter-key="progress_detail" onclick="event.stopPropagation();toggleColumnFilter('progress_detail',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-progress_detail"></div>
             </th>
             <th onclick="sortTable('feedback_score')" style="cursor:pointer">
-              反馈评分 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('feedback_score',event)">&#9660;</button>
+              反馈评分 <button class="col-filter-btn" data-filter-key="feedback_score" onclick="event.stopPropagation();toggleColumnFilter('feedback_score',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-feedback_score"></div>
             </th>
             <th>
-              建议反馈 <button class="col-filter-btn" onclick="event.stopPropagation();toggleColumnFilter('feedback_comment',event)">&#9660;</button>
+              建议反馈 <button class="col-filter-btn" data-filter-key="feedback_comment" onclick="event.stopPropagation();toggleColumnFilter('feedback_comment',event)">&#9660;</button>
               <div class="col-filter-popup" id="filter-popup-feedback_comment"></div>
             </th>
           </tr>
@@ -1253,7 +1253,7 @@ function updateColumnFilter(key, checkbox) {
 
 function clearColumnFilter(key) {
   delete columnFilters[key];
-  const btn = document.querySelector('button[onclick*="toggleColumnFilter(\'' + key + '\'"');
+  const btn = document.querySelector('button[data-filter-key="' + key + '"');
   if (btn) btn.classList.remove('active');
   applyAllFilters();
   closeFilterPopup();
@@ -1286,10 +1286,10 @@ function applyAllFilters() {
   });
 
   // Update filter button active states
-  for (const key of Object.keys(columnFilters)) {
-    const btn = document.querySelector('button[onclick*="toggleColumnFilter(\'' + key + '\'"');
-    if (btn) btn.classList.add('active');
-  }
+  document.querySelectorAll('.col-filter-btn').forEach(btn => {
+    const key = btn.dataset.filterKey;
+    btn.classList.toggle('active', key && columnFilters[key] && columnFilters[key].size > 0);
+  });
 
   renderAll();
 }
